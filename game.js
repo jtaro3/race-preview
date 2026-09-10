@@ -900,6 +900,12 @@ function drawKart(x, y, s, color, hero, tilt = 0, frame = 'rear') {
   ctx.translate(x, y);
   ctx.rotate(tilt);
   const unit = s / 7;
+  // The fixed player camera needs a clear contact shadow; otherwise the kart
+  // appears to float above the road while world-space rivals remain grounded.
+  ctx.fillStyle = hero ? '#06101699' : '#06101677';
+  ctx.beginPath();
+  ctx.ellipse(0, unit * .18, unit * 3.05, unit * .52, 0, 0, Math.PI * 2);
+  ctx.fill();
   if (hero && Math.abs(player.speed) > 20) {
     const flameColor = player.boost > 0 ? '#f04e32' : '#f6c85f';
     ctx.fillStyle = flameColor;
@@ -958,7 +964,7 @@ function renderRaceView(w, raceH) {
   renderWalls(w, raceH);
   renderFinish(w, raceH);
   renderObjects(w, raceH);
-  drawKart(w / 2, raceH * .78, Math.min(58, raceH * .115), '#caff3d', true, player.steer * .14);
+  drawKart(w / 2, raceH * .85, Math.min(58, raceH * .115), '#caff3d', true, player.steer * .14);
   if (player.hitFlash > 0) {
     ctx.fillStyle = `rgba(255,45,141,${player.hitFlash*.18})`;
     ctx.fillRect(0, 0, w, raceH)
@@ -1355,7 +1361,7 @@ function renderRaceView(w, raceH) {
   renderGroundMaterial(w, raceH);
   renderCourseTiles(w, raceH);
   renderObjects(w, raceH);
-  drawKart(w / 2, raceH * .78, Math.min(58, raceH * .115), '#caff3d', true, player.steer * .14);
+  drawKart(w / 2, raceH * .85, Math.min(58, raceH * .115), '#caff3d', true, player.steer * .14);
   if (player.hitFlash > 0) {
     ctx.fillStyle = `rgba(255,45,141,${player.hitFlash*.18})`;
     ctx.fillRect(0, 0, w, raceH)
