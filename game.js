@@ -600,8 +600,10 @@ function updateTouchDrive(x, y) {
   }
   touchInput.left = dx < -10;
   touchInput.right = dx > 10;
-  touchInput.up = dy < -10;
+  // A horizontal mobile swipe means "turn while driving".  Previously it
+  // only set left/right, so a stopped kart could not move right or left.
   touchInput.down = dy > 10;
+  touchInput.up = !touchInput.down && (dy < -10 || Math.abs(dx) > 10 && dy < 18);
   touchPad.style.setProperty('--stick-x', `${dx}px`);
   touchPad.style.setProperty('--stick-y', `${dy}px`)
 }
