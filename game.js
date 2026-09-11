@@ -16,6 +16,7 @@ const touchInput = {
 let touchPointer = null,
   touchOrigin = null;
 const touchPad = $('#touchPad');
+const gameFrame = $('.game-frame');
 
 // Course data lives in world space. Changing these points reshapes both views.
 const trackPoints = [{
@@ -330,6 +331,33 @@ document.addEventListener('visibilitychange', () => {
     resetTouchPad()
   }
 });
+
+// Mobile browsers can interpret a driving swipe as page scroll or pinch zoom.
+// Lock those gestures only while a race/countdown is active, not in the editor.
+function setGameplayLock(active) {
+  document.documentElement.classList.toggle('gameplay-active', active);
+  document.body.classList.toggle('gameplay-active', active)
+}
+
+function blockGameplayGesture(event) {
+  if (document.body.classList.contains('gameplay-active')) event.preventDefault()
+}
+
+['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(type => {
+  gameFrame.addEventListener(type, blockGameplayGesture, {
+    passive: false
+  })
+});
+['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+  document.addEventListener(type, blockGameplayGesture, {
+    passive: false
+  })
+});
+gameFrame.addEventListener('wheel', event => {
+  if (document.body.classList.contains('gameplay-active') && event.ctrlKey) event.preventDefault()
+}, {
+  passive: false
+});
 $('#soundBtn').onclick = () => {
   sound = !sound;
   $('#soundBtn').textContent = `SOUND ${sound?'ON':'OFF'}`
@@ -354,6 +382,7 @@ function beep(freq, d = .08) {
 
 function startRace() {
   resetTouchPad();
+  setGameplayLock(true);
   setPlayerStart();
   boostPads.forEach(b => b.armed = true);
   rivals.forEach((r, i) => {
@@ -534,6 +563,7 @@ function update(dt, now) {
 
 function finish(now) {
   state = 'finish';
+  setGameplayLock(false);
   const pos = $('#position').textContent,
     suffix = pos === '1' ? 'ST' : pos === '2' ? 'ND' : pos === '3' ? 'RD' : 'TH';
   $('#finishPlace').textContent = pos + suffix;
@@ -1519,6 +1549,7 @@ function paintEditor(e) {
 
 function openEditor() {
   resetTouchPad();
+  setGameplayLock(false);
   editorPreviousState = state;
   editorOverlay.classList.add('show');
   state = 'editor';
@@ -1527,7 +1558,8 @@ function openEditor() {
 
 function closeEditor() {
   editorOverlay.classList.remove('show');
-  state = editorPreviousState
+  state = editorPreviousState;
+  setGameplayLock(state === 'race' || state === 'countdown')
 }
 
 function saveCourse() {
@@ -1613,6 +1645,7 @@ function startEditedMap() {
   $('#finishScreen').classList.remove('show');
   editorOverlay.classList.remove('show');
   state = 'countdown';
+  setGameplayLock(true);
   countValue = 3;
   startAt = performance.now();
   showCount('3');
